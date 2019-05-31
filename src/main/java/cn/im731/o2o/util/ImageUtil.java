@@ -35,7 +35,8 @@ public class ImageUtil {
             Thumbnails.of(thumbnailInputStream)
                     .size(200, 200)
 //                    .watermark(Positions.BOTTOM_RIGHT, ImageIO.read(new File(basePath+"/watermark.jpg")), 1f)
-                    .watermark(Positions.BOTTOM_RIGHT, ImageIO.read(new File("E:/JavaWEB/o2o/src/main/resources"+"/watermark.jpg")), 1f)//TODO 改成相对路径
+//                    .watermark(Positions.BOTTOM_RIGHT, ImageIO.read(new File("E:/JavaWEB/o2o/src/main/resources"+"/watermark.jpg")), 1f)//TODO 改成相对路径
+//                    .watermark(Positions.BOTTOM_RIGHT, ImageIO.read(new File("E:/JavaWEB/o2o/src/main/resources"+"/watermark.jpg")), 1f)//TODO 改成相对路径
                     .outputQuality(0.8f)
                     .toFile(dest);
         } catch (Exception e) {

@@ -4,13 +4,15 @@
  */
 //TODO 验证表单输入的合法性
 $(function () {
-    var initUrl = '/o2o/shopadmin/getshopinitinfo';
-    var registerShopUrl = '/o2o/shopadmin/registershop';
+    var initUrl = '/shopadmin/getshopinitinfo';
+    var registerShopUrl = '/shopadmin/registershop';
 
-    alert(initUrl);
     getShopInitInfo();
 
     function getShopInitInfo() {
+        /**
+         * 获取页面需要的初始信息
+         */
         $.getJSON(initUrl, function (data) {
             if (data.success) {
                 //先获取
@@ -30,6 +32,9 @@ $(function () {
             }
         });
 
+        /**
+         * 点击提交按钮
+         */
         $('#submit').click(function () {
             var shop = {};
             shop.shopName = $('#shop-name').val();
@@ -50,6 +55,15 @@ $(function () {
             var formData = new FormData();
             formData.append('shopImg', shopImg);
             formData.append('shopStr', JSON.stringify(shop));
+
+            //处理输入的验证码
+            var verifyCodeActual = $('#j_captcha').val();
+            if (!verifyCodeActual) {
+                $.toast('请输入验证码！')
+                return;
+            }
+            formData.append('verifyCodeActual', verifyCodeActual);
+
             $.ajax({
                 url : registerShopUrl,
                 type : 'POST',
@@ -63,6 +77,7 @@ $(function () {
                     } else {
                         $.toast('提交失败！'+data.errMsg);
                     }
+                    $('#captcha_img').click();//无论提交成功或失败，都要重新换个验证码
                 }
             });
         });
