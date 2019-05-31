@@ -3,6 +3,7 @@ package cn.im731.o2o.web.shopadmin;
 import cn.im731.o2o.dto.ShopExecution;
 import cn.im731.o2o.entity.PersonInfo;
 import cn.im731.o2o.entity.Shop;
+import cn.im731.o2o.enums.ShopStateEnum;
 import cn.im731.o2o.service.ShopService;
 import cn.im731.o2o.util.HttpServletRequestUtil;
 import cn.im731.o2o.util.ImageUtil;
@@ -57,61 +58,29 @@ public class ShopManagementController {
         //2. 注册店铺
         if (shop != null && shopImg != null) {
             PersonInfo owner = new PersonInfo();
+            //TODO owner应该从session获取
             owner.setUserId(1L);
             shop.setOwner(owner);
-            //暂存上传的图片，用后删除即可
-            File shopImgFile = new File(PathUtil.getImgBasePath() + ImageUtil.getRamdomFileName());
+            ShopExecution shopExecution = null;
             try {
-                shopImgFile.createNewFile();
+                shopExecution = shopService.addShop(shop, shopImg.getInputStream(), shopImg.getOriginalFilename());
+                //3. 返回结果
+                if (shopExecution.getState() == ShopStateEnum.CHECK.getState()) {
+                    modelMap.put("success", true);
+                } else {
+                    modelMap.put("success", false);
+                    modelMap.put("errMsg", shopExecution.getStateInfo());
+                }
             } catch (IOException e) {
                 modelMap.put("success", false);
-                modelMap.put("errMsg", e.toString());
-                return modelMap;
+                modelMap.put("errMsg", shopExecution.getStateInfo());
             }
-            //利用InputStream实现CommonsMultipartFile和File的转换
-            try {
-                inputStreamToFile(shopImg.getInputStream(), shopImgFile);
-            } catch (IOException e) {
-                modelMap.put("success", false);
-                modelMap.put("errMsg", e.toString());
-                return modelMap;
-            }
-
-            ShopExecution shopExecution = shopService.addShop(shop, shopImgFile);
+            return modelMap;
         } else {
             modelMap.put("success", false);
-            modelMap.put("errMsg", "店铺信息不能为空");
+            modelMap.put("errMsg", "请输入店铺信息");
             return modelMap;
         }
-        //3. 返回结果
     }
 
-    private static void inputStreamToFile(InputStream inputStream, File file) {
-        FileOutputStream outputStream = null;
-        try {
-            outputStream = new FileOutputStream(file);
-            int bytes = 0;
-            byte[] buffer = new byte[1024];
-            while ((bytes = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytes);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("inputStreamToFile异常："+e.toString());
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }

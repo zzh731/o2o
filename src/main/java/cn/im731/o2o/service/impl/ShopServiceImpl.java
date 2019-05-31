@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.Date;
 
 @Service
@@ -24,32 +24,35 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     @Transactional//开启事务
-    public ShopExecution addShop(Shop shop, CommonsMultipartFile shopImg) {
+    public ShopExecution addShop(Shop shop, InputStream shopImgInputStream, String fileName) {
         if (shop == null) {
             return new ShopExecution(ShopStateEnum.NULL_SHOP);
         }
 
         try {
+            //1. 配置店铺状态
             shop.setEnableStatus(0);
             shop.setCreateTime(new Date());
             shop.setLastEditTime(new Date());
-            //1. 添加店铺信息
+
+            //2. 向数据库添加店铺信息
             int effectedNum = shopDao.insertShop(shop);
             if (effectedNum <= 0) {
                 throw new RuntimeException("店铺创建失败");//必须是RuntimeException，事务才能回滚
             } else {
-                if (shopImg != null) {
+                if (shopImgInputStream != null) {
                     //2. 存储图片
                     try {
-                        addShopImg(shop, shopImg);
+                        addShopImg(shop, shopImgInputStream, fileName);
                     } catch (Exception e) {
                         throw new RuntimeException("addShopImg error: " + e.getMessage());
                     }
-                    //3. 更新店铺的图片信息到数据库
+                    //4. 更新店铺的图片信息到数据库
                     effectedNum = shopDao.updateShop(shop);
                     if (effectedNum <= 0) {
                         throw new RuntimeException("更新图片地址失败");
-
+                    } else {
+                        return new ShopExecution(ShopStateEnum.CHECK, shop);
                     }
                 }
             }
@@ -61,15 +64,14 @@ public class ShopServiceImpl implements ShopService {
 
 
     /**
-     * 将传来的图片起名，设置到shop
+     * 将传来的图片按照店铺ID随机起名，设置到shop的shop_img中
      * 生成缩略图
-     * @param shop
-     * @param shopImg
      */
-    private void addShopImg(Shop shop, CommonsMultipartFile shopImg) {
-        //获取shop图片目录的相对值路径
+    private void addShopImg(Shop shop, InputStream shopImgInputStream, String fileName) {
+        //获取shop图片目录的相对路径
         String dest = PathUtil.getShopImagePath(shop.getShopId());
-        String shopImgAddr = ImageUtil.generateThumbnail(shopImg, dest);
+        //生成缩略图,返回带文件名的相对路径
+        String shopImgAddr = ImageUtil.generateThumbnail(shopImgInputStream, fileName, dest);
         shop.setShopImg(shopImgAddr);
     }
 }
