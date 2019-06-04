@@ -15,6 +15,7 @@ import cn.im731.o2o.util.ImageUtil;
 import cn.im731.o2o.util.PathUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -41,6 +42,59 @@ public class ShopManagementController {
 
     @Autowired
     private AreaService areaService;
+
+    @RequestMapping(value = "/getshopmanagementinfo", method = RequestMethod.GET)
+    @ResponseBody
+    private Map<String, Object> getShopManagementInfo(HttpServletRequest request) {
+        Map<String, Object> modelMap = new HashMap<>();
+        long shopId = HttpServletRequestUtil.getLong(request, "shopId");
+        if (shopId <= 0) {
+            Object currentShopObj = request.getSession().getAttribute("currentShop");
+            if (currentShopObj == null) {
+                modelMap.put("redirect", true);
+                modelMap.put("url", "/shop/shoplist");
+            } else {
+                Shop currentShop = (Shop) currentShopObj;
+                modelMap.put("redirect", false);
+                modelMap.put("shopId", currentShop.getShopId());
+            }
+        } else {
+            Shop currentShop = new Shop();
+            currentShop.setShopId(shopId);
+            request.getSession().setAttribute("currentShop", currentShop);
+            modelMap.put("redirect", false);
+        }
+        return null;
+    }
+
+    /**
+     * 获取店铺列表
+     */
+    @RequestMapping(value = "/getshoplist", method = RequestMethod.GET)
+    @ResponseBody
+    private Map<String, Object> getShopList(HttpServletRequest request) {
+        Map<String, Object> modelMap = new HashMap<>();
+        //TODO 从session获取当前用户
+//            PersonInfo user = (PersonInfo) request.getSession().getAttribute("user");
+        PersonInfo user = new PersonInfo();
+        user.setUserId(1L);
+        user.setName("测试用户");
+        long employeeId = user.getUserId();
+        List<Shop> shopList = new ArrayList<>();
+        ShopExecution shopExecution = null;
+        try {
+            Shop shopCondition = new Shop();
+            shopCondition.setOwner(user);
+            shopExecution = shopService.getShopList(shopCondition, 1, 100);
+        } catch (Exception e) {
+            modelMap.put("success", false);
+            modelMap.put("errMsg", e.toString());
+        }
+        modelMap.put("shopList", shopExecution.getShopList());
+        modelMap.put("user", user);
+        modelMap.put("success", true);
+        return modelMap;
+    }
 
     @RequestMapping(value = "/getshopbyid", method = RequestMethod.GET)
     @ResponseBody
@@ -128,7 +182,11 @@ public class ShopManagementController {
             ShopExecution shopExecution = null;
             try {
                 // 执行修改service,注意shopImg允许为null
-                shopExecution = shopService.modifyShop(shop, shopImg.getInputStream(), shopImg.getOriginalFilename());
+                if (shopImg == null) {
+                    shopExecution = shopService.modifyShop(shop, null, null);
+                } else {
+                    shopExecution = shopService.modifyShop(shop, shopImg.getInputStream(), shopImg.getOriginalFilename());
+                }
                 //3. 返回结果
                 if (shopExecution.getState() == ShopStateEnum.SUCCESS.getState()) {
                     modelMap.put("success", true);
@@ -187,8 +245,10 @@ public class ShopManagementController {
         }
         //2. 注册店铺
         if (shop != null && shopImg != null) {
-            //从session获取当前用户
-            PersonInfo owner = (PersonInfo) request.getSession().getAttribute("user");
+            //TODO 从session获取当前用户
+//            PersonInfo owner = (PersonInfo) request.getSession().getAttribute("user");
+            PersonInfo owner = new PersonInfo();
+            owner.setUserId(1L);
             shop.setOwner(owner);
             ShopExecution shopExecution = null;
             try {

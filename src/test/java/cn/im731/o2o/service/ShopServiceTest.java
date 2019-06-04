@@ -17,10 +17,21 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
 
 public class ShopServiceTest extends BaseTest {
     @Autowired
     private ShopService shopService;
+
+    @Test
+    public void testGetShopList() {
+        Shop shopCondition = new Shop();
+        PersonInfo owner = new PersonInfo();
+        owner.setUserId(1L);
+        shopCondition.setOwner(owner);
+        ShopExecution shopExecution = shopService.getShopList(shopCondition, 1, 5);
+        System.out.println(shopExecution);
+    }
 
     @Test
     public void testModifyShop() throws ShopOperationException, FileNotFoundException {
