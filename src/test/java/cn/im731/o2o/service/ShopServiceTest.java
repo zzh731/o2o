@@ -7,6 +7,7 @@ import cn.im731.o2o.entity.PersonInfo;
 import cn.im731.o2o.entity.Shop;
 import cn.im731.o2o.entity.ShopCategory;
 import cn.im731.o2o.enums.ShopStateEnum;
+import cn.im731.o2o.exceptions.ShopOperationException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
@@ -20,6 +21,17 @@ import java.util.Date;
 public class ShopServiceTest extends BaseTest {
     @Autowired
     private ShopService shopService;
+
+    @Test
+    public void testModifyShop() throws ShopOperationException, FileNotFoundException {
+        long shopId = 1;
+        Shop shop = shopService.getByShopId(shopId);
+        shop.setShopName("731早餐店");
+        File shopImg = new File("E:/paint.jpg");
+        InputStream is = new FileInputStream(shopImg);
+        ShopExecution shopExecution = shopService.modifyShop(shop, is, "ff.jpg");
+        System.out.println(shopExecution);
+    }
 
     @Test
     public void testAddShop() {

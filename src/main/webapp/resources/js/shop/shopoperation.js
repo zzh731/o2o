@@ -4,10 +4,44 @@
  */
 //TODO 验证表单输入的合法性
 $(function () {
+    // var shopId = getQueryString('shopId');
+    var shopId = 1;
+    var isEdit = shopId ? true : false;//如果shopId不为空，那么是修改店铺操作。反之是新增店铺操作
     var initUrl = '/shopadmin/getshopinitinfo';
     var registerShopUrl = '/shopadmin/registershop';
+    var shopInfoUrl = '/shopadmin/getshopbyid?shopid=' + shopId;
+    var editShopUrl = '/shopadmin/modifyshop';
 
-    getShopInitInfo();
+    //判断是修改还是新增
+    if (isEdit) {   //修改
+        getShopInfo(shopId);
+    } else {    //新增
+        getShopInitInfo();
+    }
+
+    function getShopInfo(shopId) {
+        $.getJSON(shopInfoUrl, function (data) {
+            if (data.success) {
+                var shop = data.shop;
+                $('#shop-name').val(shop.shopName);
+                $('#shop-addr').val(shop.shopAddr);
+                $('#shop-phone').val(shop.phone);
+                $('#shop-desc').val(shop.shopDesc);
+                var shopCategory = '<option data-id="'
+                    + shop.shopCategory.shopCategoryId + '" selected>'
+                    + shop.shopCategory.shopCategoryName + '</option>';
+                var tempAreaHtml = '';
+                data.areaList.map(function (item, index) {
+                    tempAreaHtml += '<option data-id="' + item.areaId + '">'
+                        + item.areaName + '</option>';
+                });
+                $('#shop-category').html(shopCategory);
+                $('#shop-category').attr('disabled', 'disabled');
+                $('#area').html(tempAreaHtml);
+                $('#area').attr('data-id', shop.areaId);
+            }
+        });
+    }
 
     function getShopInitInfo() {
         /**
@@ -22,8 +56,7 @@ $(function () {
                 data.shopCategoryList.map(function (item, index) {
                     tempHtml += '<option data-id="' + item.shopCategoryId + '">' + item.shopCategoryName + '</option>';
                 });
-                data.areaList.map(function (item, index)
-                {
+                data.areaList.map(function (item, index) {
                     tempAreaHtml += '<option data-id="' + item.areaId + '">' + item.areaName + '</option>';
                 });
                 //加入html
@@ -65,17 +98,17 @@ $(function () {
             formData.append('verifyCodeActual', verifyCodeActual);
 
             $.ajax({
-                url : registerShopUrl,
-                type : 'POST',
-                data : formData,
-                contentType : false,
-                processData : false,
-                cache : false,
-                success : function (data) {
+                url: isEdit ? editShopUrl : registerShopUrl,//根据isEdit判断提交的url
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                cache: false,
+                success: function (data) {
                     if (data.success) {
                         $.toast('提交成功！');
                     } else {
-                        $.toast('提交失败！'+data.errMsg);
+                        $.toast('提交失败！' + data.errMsg);
                     }
                     $('#captcha_img').click();//无论提交成功或失败，都要重新换个验证码
                 }

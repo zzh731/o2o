@@ -72,6 +72,28 @@ public class ImageUtil {
         return rannum+nowTimeStr;
     }
 
+    /**
+     * 判断storePath是文件路径还是目录的路径
+     * 如果是文件路径则删除文件
+     * 如果是目录路径，则删除目录下的所有文件
+     * @param storePath
+     */
+    public static void deleteFileOrPath(String storePath) {
+        //获取到全路径
+        File fileOrPath = new File(PathUtil.getImgBasePath() + storePath);
+        if (fileOrPath.exists()) {
+            //如果是目录,删除目录中所有文件
+            if (fileOrPath.isDirectory()) {
+                File[] files = fileOrPath.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    files[i].delete();
+                }
+            }
+            //然后删除该目录
+            fileOrPath.delete();
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         Thumbnails.of(new File("E:/1.jpg"))
                 .size(200,200)

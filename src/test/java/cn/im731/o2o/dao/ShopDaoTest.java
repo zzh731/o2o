@@ -5,6 +5,7 @@ import cn.im731.o2o.entity.Area;
 import cn.im731.o2o.entity.PersonInfo;
 import cn.im731.o2o.entity.Shop;
 import cn.im731.o2o.entity.ShopCategory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,6 +16,14 @@ public class ShopDaoTest extends BaseTest {
     private ShopDao shopDao;
 
     @Test
+    public void testQueryByShopId() {
+        long shopId = 1;
+        Shop shop = shopDao.queryByShopId(shopId);
+        System.out.println(shop);
+    }
+
+    @Test
+    @Ignore
     public void testInsertShop() {
         Shop shop = new Shop();
         PersonInfo owner = new PersonInfo();
@@ -42,6 +51,7 @@ public class ShopDaoTest extends BaseTest {
     }
 
     @Test
+    @Ignore
     public void testUpdateShop() {
         Shop shop = new Shop();
         shop.setShopId(5L);
